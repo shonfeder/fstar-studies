@@ -1,0 +1,12 @@
+;; Build the OCaml to a native executable
+(executable
+ (name main)
+ (public_name sum)
+ (libraries fstarlib)
+ (preprocess (pps ppx_deriving_yojson)))
+
+;; Transpile to OCaml code
+(rule
+ (target Main.ml)
+ (deps (:main Main.fst))
+ (action (run fstar.exe --codegen OCaml --extract Main %{main} --record_hints)))

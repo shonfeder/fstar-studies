@@ -1,0 +1,6 @@
+#+TITLE:   My fst F*
+#+DATE:    January 30, 2020
+
+This repo holds my own study material and tutorial-like notes on getting started
+with =F*=, "a general-purpose functional programming language with effects aimed
+at program verification".

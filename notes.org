@@ -1,0 +1,179 @@
+#+TITLE:   Notes on Getting Started with F*
+#+AUTHOR: Shon Feder
+
+#+EXPORT_FILE_NAME: ./public/index.html
+
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="https://gongzhitaao.org/orgcss/org.css"/>
+#+HTML_HEAD_EXTRA: <link rel="stylesheet" type="text/css" href="styles.css"/>
+
+# TODO
+# Generates a well-named link to the file in the souce tree on gitlab
+#+MACRO: gitlab [[https://gitlab.com/shonfeder/ocaml_webapp/blob/master/$1][./$1]]
+
+These are notes I've taken while learning the basics of F* myself. I claim no
+expertise and would welcome any corrections or tips for improvement.
+
+* My Aim
+
+As I see it, this is the promise of F*: The programmer is empowered to write
+verified programs enforcing *any* desired properties and invariants without
+being burdened by any cognitive overhead or needless ceremony when such
+enforcement isn't needed.
+
+To test this, I'll explore
+
+1. Writing the hello world of imperative IO program: "Hello, World".
+3. Writing the hello world of dependently typed functional programming:
+   vectors with statically verified lengths.
+2. *TODO* Writing a simple, statically verified stateful algorithm
+
+* Installation
+
+See https://github.com/FStarLang/FStar/blob/master/INSTALL.md.
+
+In brief:
+
+#+BEGIN_SRC sh
+# Get opam up to date
+opam update
+opam upgrade
+
+# Create a directory for playing with fstar
+mkdir fstar
+cd fstar
+
+# fstar requires an older version of of the ocaml compiler
+# so create a new switch to sanbox our development
+# NOTE Latest supported version as of 2020-01-30
+# check the currently supported ocaml version with `opam info fstar`
+opam switch create . 4.07.1
+opam pin add fstar --dev-repo
+opam install fstar
+
+# Pin my switch-plate to get the usual dev tooling in place
+opam pin git@gitlab.com:shonfeder/switch-plate.git
+# Alternatively, install your own preferred tools
+
+# Install the Z3 SMT prover, a runtime dependency
+sudo pacman -Syu z3 # NOTE Only for Arch. Search your systems package repository
+#+END_SRC
+
+* Editor setup
+
+** For [[https://github.com/hlissner/doom-emacs][doom-emacs]]
+
+Add the following to your [[file:~/.doom.d/packages.el]]:
+
+#+BEGIN_SRC emacs-lisp
+(package! fstar-mode)
+#+END_SRC
+
+To pick up the opam switch environment, add the following to file:~/.doom.d/config.el:
+
+#+BEGIN_SRC emacs-lisp
+(add-hook! fstar-mode
+           ;; sync the opam environment to work with sandbocked install of fstar
+           (add-hook 'find-file-hook (lambda () (opam-update-env nil))))
+#+END_SRC
+
+Refresh and restart emacs with the key sequences
+
+#+BEGIN_SRC keys
+SPC h r r
+SPC q r
+#+END_SRC
+
+** Other editors
+
+See [[https://github.com/FStarLang/FStar/wiki/Editor-support-for-F*][Editor support for F*]].
+
+
+* The Hello World of Imperative Programming: Hello World
+
+The first test of this promise is whether it is trivial to write *and execute* a
+hello world program.
+
+Create a new directory for the hello world study.
+
+#+BEGIN_SRC sh
+mkdir hello
+cd hello
+#+END_SRC
+
+Then, in =bin/Hello.fst= a standard, uninteresting "Hello, World!" program:
+
+#+NAME: bin/Hello.fst
+#+INCLUDE: ./hello/bin/Hello.fst src fstar
+
+** Verifying
+
+We can verify the program with
+
+#+BEGIN_SRC sh
+fstar.exe bin/hello.fst
+#+END_SRC
+
+or, from within emacs by running
+
+=fstar-cli-verify=, bound to =C-c C-v= by default.
+
+Verifying even a small program can take a few seconds. However, =fstar-mode=
+integrates with [[https://proofgeneral.github.io/][Proof General]], which allows incremental verification of the
+proofs in the code.
+
+** Building and executing
+
+The following describes a build configuration using OCaml's =dune=. (See
+https://github.com/FStarLang/FStar/wiki/Executing-F*-code for the official
+guidance on setting up builds with =make=.)
+
+Configure the build in [[file:hello/bin/dune][bin/dune]]
+
+#+CAPTION: The build configuration in [[hello/bin/dune][hello/bin/dune]]
+#+NAME: hello/bin/dune
+#+INCLUDE: ./hello/bin/dune src dune
+
+And create the empty opam file [[file:hello/hello.opam][hello.opam]] (to keep dune happy).
+
+Build and execute the program with
+
+#+BEGIN_SRC sh
+dune exec hello
+#=> Hello F*!
+#+END_SRC
+
+Voila: a trivial, uninteresting, totally boring, side-effecting, imperative
+program.
+
+* The Hello World of Dependently Typed Programming: Length-Indexed Lists
+This code will be familiar if you've seen vectors in a dependently typed
+language like Agda or Coq, but it's hopefully quite readable even if you have
+not.
+
+Note that arguments prefixed by =#= indicate /implicit/ arguments. These
+can be left out when a function is called, and the type system will try to infer
+the argument from the context.
+
+#+CAPTION: Statically length-indexed vectors in [[vecs/bin/Main.fst][vecs/bin/Main.fst]]
+#+NAME: vecs/bin/Main.fst
+#+INCLUDE: ./vecs/bin/Main.fst src fstar
+
+** Building and executing
+
+We use essentially the same build configuration, except we set some CLI flags in
+order to silence warnings that would otherwise cause noise due to idiosyncrasies
+of the generated OCaml.
+
+#+CAPTION: The build configuration in [[vecs/bin/dune][vecs/bin/dune]]
+#+NAME: vecs/bin/dune
+#+INCLUDE: ./vecs/bin/dune src dune
+
+Again, build and execute with
+
+#+BEGIN_SRC sh
+dune exec vecs
+#+END_SRC
+* TODO A Formally Verified Imperative Program
+
+* Tasks
+** TODO Fix link exports to go to relative file paths

@@ -1,0 +1,14 @@
+;; Build the OCaml to a native executable
+(executable
+ ;; The name of the executable to build (matches the Hello.ml file)
+ (public_name hello)  
+ ;; The FStar standard library
+ (libraries fstarlib)
+  ;; A requisite for the standard lib
+ (preprocess (pps ppx_deriving_yojson)))
+
+;; Transpile to OCaml code
+(rule
+ (targets Hello.ml)
+ (deps (:hello Hello.fst))
+ (action (run fstar.exe --codegen OCaml --extract Hello Hello.fst --record_hints)))

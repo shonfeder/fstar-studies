@@ -1,0 +1,19 @@
+;; Build the OCaml to a native executable
+(executable
+ (name main)
+ (public_name vecs)
+ (libraries fstarlib)
+ (preprocess (pps ppx_deriving_yojson)))
+
+;; Transpile to OCaml code
+(rule
+ (target Main.ml)
+ (deps (:main Main.fst))
+ (action (run fstar.exe --codegen OCaml --extract Main %{main} --record_hints)))
+
+;; The generated OCaml code often has unused variables or non-exhaustive
+;; matches, so we turn off warnings for unused variables and incomplete match
+;; errors.
+(env
+ (dev
+  (flags (:standard -w -27 -w -8))))
